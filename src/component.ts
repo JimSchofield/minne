@@ -2,9 +2,11 @@ import { html, render, Renderable } from "lighterhtml";
 import { effect, signal } from "@preact/signals";
 export { html as h };
 
+const identity = (t: any) => t;
+
 const onDestroy = Symbol("on-destroy");
 
-export default abstract class Component extends HTMLElement {
+export abstract class Component extends HTMLElement {
   [onDestroy]: (() => void)[] = [];
 
   addDestroyer(cb: () => void) {
@@ -50,13 +52,27 @@ export default abstract class Component extends HTMLElement {
     }
   }
 
-  attribute(attr: string, reflect?: boolean) {
-    const sig = signal(this.getAttribute(attr));
+  convert<T>(
+    attributeName: string,
+    fromAttr: (val: string) => T,
+    toAttr?: (val: T) => string,
+  ) {
+    return toAttr
+      ? this.attribute(attributeName, true, fromAttr, toAttr)
+      : this.attribute(attributeName, false, fromAttr);
+  }
+  attribute<T>(
+    attr: string,
+    reflect?: boolean,
+    fromAttr: (val: string) => T = identity,
+    toAttr: (val: T) => string = identity,
+  ) {
+    const sig = signal<string | T>(fromAttr(this.getAttribute(attr) ?? ""));
 
     const mo = new MutationObserver((list) => {
       for (const item of list) {
         if (item.attributeName === attr) {
-          sig.value = this.getAttribute(attr);
+          sig.value = fromAttr(this.getAttribute(attr) ?? "");
         }
       }
     });
@@ -65,9 +81,14 @@ export default abstract class Component extends HTMLElement {
     this.addDestroyer(mo.disconnect);
 
     if (reflect) {
-      const disposeEffect = effect(() =>{
-        this.setAttribute(attr, sig.value ?? "");
-      })
+      const disposeEffect = effect(() => {
+        const currentAttr = this.getAttribute(attr);
+
+        // Don't trigger if already equal
+        if (currentAttr !== toAttr(sig.value as T)) {
+          this.setAttribute(attr, toAttr(sig.value as T));
+        }
+      });
 
       this.addDestroyer(disposeEffect);
     }

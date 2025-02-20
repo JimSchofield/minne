@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals";
-import Component, { h } from "./component";
+import { Component, h } from "./component";
 import { actions, myList } from "./some-state";
 
 export default class MyList extends Component {
