@@ -1,16 +1,46 @@
 import { html, render, Renderable } from "lighterhtml";
-import { effect, signal } from "@preact/signals";
+import { effect, signal} from "@preact/signals-core";
 export { html as h };
 
 const identity = (t: any) => t;
 
+const renderDispose = Symbol("render-dispose");
 const onDestroy = Symbol("on-destroy");
 
 export abstract class Component extends HTMLElement {
-  [onDestroy]: (() => void)[] = [];
+  [onDestroy]: Set<() => void> = new Set();
+
+  styles = "";
+
+  constructor() {
+    super();
+
+    if (this.constructor.styles) {
+      this.attachStyles();
+    }
+  }
+
+  attachStyles() {
+    const stylesheet = new CSSStyleSheet();
+    stylesheet.replace(this.constructor.styles);
+
+    const root = this.getMountPoint();
+
+    if (root instanceof ShadowRoot) {
+      root.adoptedStyleSheets = [
+        ...root.adoptedStyleSheets,
+        stylesheet,
+      ];
+    } else {
+      document.adoptedStyleSheets = [
+        ...document.adoptedStyleSheets,
+        stylesheet,
+      ];
+    }
+  }
 
   addDestroyer(cb: () => void) {
-    this[onDestroy].push(cb);
+    this[onDestroy].add(cb);
   }
 
   getMountPoint(): HTMLElement | ShadowRoot {
@@ -25,14 +55,15 @@ export abstract class Component extends HTMLElement {
         (this.render as () => Renderable).bind(this),
       );
 
-      // @ts-expect-error live value
-      const renderDispose = effect(this.render);
-      this.addDestroyer(renderDispose);
+      const destroyEffect = effect(this.render);
+      this.addDestroyer(destroyEffect);
     }
   }
 
   destroy() {
-    this[onDestroy].forEach((fn) => fn());
+    this[onDestroy].forEach(function (fn) {
+      fn();
+    });
   }
 
   disconnectedCallback() {
@@ -61,6 +92,7 @@ export abstract class Component extends HTMLElement {
       ? this.attribute(attributeName, true, fromAttr, toAttr)
       : this.attribute(attributeName, false, fromAttr);
   }
+
   attribute<T>(
     attr: string,
     reflect?: boolean,
@@ -68,6 +100,19 @@ export abstract class Component extends HTMLElement {
     toAttr: (val: T) => string = identity,
   ) {
     const sig = signal<string | T>(fromAttr(this.getAttribute(attr) ?? ""));
+
+    if (reflect) {
+      const disposeEffect = effect(() => {
+        const currentAttr = this.getAttribute(attr);
+
+        // Don't trigger if already equal
+        if (currentAttr !== toAttr(sig.peek as T)) {
+          this.setAttribute(attr, toAttr(sig.value as T));
+        }
+      });
+
+      this.addDestroyer(disposeEffect);
+    }
 
     const mo = new MutationObserver((list) => {
       for (const item of list) {
@@ -78,20 +123,8 @@ export abstract class Component extends HTMLElement {
     });
 
     mo.observe(this, { attributes: true });
-    this.addDestroyer(mo.disconnect);
 
-    if (reflect) {
-      const disposeEffect = effect(() => {
-        const currentAttr = this.getAttribute(attr);
-
-        // Don't trigger if already equal
-        if (currentAttr !== toAttr(sig.value as T)) {
-          this.setAttribute(attr, toAttr(sig.value as T));
-        }
-      });
-
-      this.addDestroyer(disposeEffect);
-    }
+    this.addDestroyer(mo.disconnect.bind(mo));
 
     return sig;
   }

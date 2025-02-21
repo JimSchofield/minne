@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals";
+import { signal } from "@preact/signals-core";
 import { Component, h } from "./component";
 import { actions, myList } from "./some-state";
 

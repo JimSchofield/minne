@@ -1,4 +1,4 @@
-import { signal } from "@preact/signals";
+import { signal } from "@preact/signals-core";
 
 export const myList = signal([
   {
