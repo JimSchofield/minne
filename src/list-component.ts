@@ -3,6 +3,14 @@ import { Component, h } from "./component";
 import { actions, myList } from "./some-state";
 
 export default class MyList extends Component {
+  static styles = this.css`
+my-list {
+display: block;
+background: navy;
+color: white;
+}
+`;
+
   text = signal("");
 
   add() {
@@ -25,6 +33,6 @@ export default class MyList extends Component {
 
 declare global {
   interface HTMLElementTagNameMap {
-    MyList: MyList;
+    "my-list": MyList;
   }
 }

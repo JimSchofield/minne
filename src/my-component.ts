@@ -2,6 +2,12 @@ import { signal } from "@preact/signals-core";
 import { Component, h } from "./component";
 
 export default class MyComponent extends Component {
+  getMountPoint() {
+    return this.attachShadow({ mode: "open" })!;
+  }
+
+  static styles = this.css`div { background: pink; }`;
+
   show = signal(false);
 
   date = this.convert(

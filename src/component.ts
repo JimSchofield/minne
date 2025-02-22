@@ -1,41 +1,45 @@
 import { html, render, Renderable } from "lighterhtml";
-import { effect, signal} from "@preact/signals-core";
+import { effect, signal } from "@preact/signals-core";
 export { html as h };
 
 const identity = (t: any) => t;
 
-const renderDispose = Symbol("render-dispose");
 const onDestroy = Symbol("on-destroy");
 
 export abstract class Component extends HTMLElement {
   [onDestroy]: Set<() => void> = new Set();
 
-  styles = "";
+  static css = String.raw;
+
+  mountPoint = this.getMountPoint();
 
   constructor() {
     super();
 
-    if (this.constructor.styles) {
-      this.attachStyles();
+    if ("styles" in this.constructor) {
+      this.attachStyles(this.constructor.styles as string);
     }
   }
 
-  attachStyles() {
+  attachStyles(styles: string) {
     const stylesheet = new CSSStyleSheet();
-    stylesheet.replace(this.constructor.styles);
+    stylesheet.replaceSync(styles);
 
-    const root = this.getMountPoint();
+    // Assign a title because we need to know if there's a stylesheet
+    // being duplicated
+    Object.defineProperty(stylesheet, "title", {
+      // Arrow to capture `this` of the component
+      get: () => {
+        return this.constructor.name;
+      },
+    });
 
-    if (root instanceof ShadowRoot) {
-      root.adoptedStyleSheets = [
-        ...root.adoptedStyleSheets,
-        stylesheet,
-      ];
-    } else {
-      document.adoptedStyleSheets = [
-        ...document.adoptedStyleSheets,
-        stylesheet,
-      ];
+    const root = this.mountPoint instanceof ShadowRoot ? this.mountPoint : document;
+
+    if (
+      !root.adoptedStyleSheets.find(({ title }) => title === stylesheet.title)
+    ) {
+      root.adoptedStyleSheets = [...root.adoptedStyleSheets, stylesheet];
     }
   }
 
@@ -47,11 +51,14 @@ export abstract class Component extends HTMLElement {
     return this;
   }
 
+  // Left to override by consumer
+  render() {}
+
   connectedCallback() {
     if ("render" in this) {
       this.render = render.bind(
         null,
-        this.getMountPoint(),
+        this.mountPoint,
         (this.render as () => Renderable).bind(this),
       );
 
