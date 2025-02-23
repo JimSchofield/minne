@@ -1,7 +1,7 @@
-import { Component, h } from "./component";
+import { Component, css, html } from "../src/component";
 
 export default class MyNumberComponent extends Component {
-  static styles = this.css`
+  static css = css`
     my-number-component {
       display: block;
       padding: 1rem;
@@ -18,12 +18,16 @@ export default class MyNumberComponent extends Component {
   };
 
   render() {
-    return h`
-  <div class="my-number-component">
+    return html`
+      <div class="my-number-component">
         <div>My number ${this.num.value}</div>
-    <input type="number" .value=${this.num.value} oninput=${this.setNumber} />
-  </div>
-`;
+        <input
+          type="number"
+          .value=${this.num.value}
+          oninput=${this.setNumber}
+        />
+      </div>
+    `;
   }
 }
 

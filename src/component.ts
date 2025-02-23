@@ -1,6 +1,9 @@
 import { html, render, Renderable } from "lighterhtml";
 import { effect, signal } from "@preact/signals-core";
-export { html as h };
+export { html };
+
+const css = String.raw;
+export { css };
 
 const identity = (t: any) => t;
 
@@ -9,16 +12,26 @@ const onDestroy = Symbol("on-destroy");
 export abstract class Component extends HTMLElement {
   [onDestroy]: Set<() => void> = new Set();
 
-  static css = String.raw;
-
-  mountPoint = this.getMountPoint();
+  mountPoint: Element | ShadowRoot;
 
   constructor() {
     super();
 
-    if ("styles" in this.constructor) {
-      this.attachStyles(this.constructor.styles as string);
+    if ("css" in this.constructor) {
+      this.attachStyles(this.constructor.css as string);
     }
+
+    if ("shadowRoot" in this.constructor) {
+      this.getMountPoint = () => {
+        return this.attachShadow(this.constructor.shadowRoot as ShadowRootInit);
+      };
+    }
+
+    this.mountPoint = this.getMountPoint();
+  }
+
+  getMountPoint(): HTMLElement | ShadowRoot {
+    return this.attachShadow({ mode: "open" });
   }
 
   attachStyles(styles: string) {
@@ -34,7 +47,8 @@ export abstract class Component extends HTMLElement {
       },
     });
 
-    const root = this.mountPoint instanceof ShadowRoot ? this.mountPoint : document;
+    const root =
+      this.mountPoint instanceof ShadowRoot ? this.mountPoint : document;
 
     if (
       !root.adoptedStyleSheets.find(({ title }) => title === stylesheet.title)
@@ -45,10 +59,6 @@ export abstract class Component extends HTMLElement {
 
   addDestroyer(cb: () => void) {
     this[onDestroy].add(cb);
-  }
-
-  getMountPoint(): HTMLElement | ShadowRoot {
-    return this;
   }
 
   // Left to override by consumer
