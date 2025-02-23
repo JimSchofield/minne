@@ -12,8 +12,6 @@ const onDestroy = Symbol("on-destroy");
 export abstract class Component extends HTMLElement {
   [onDestroy]: Set<() => void> = new Set();
 
-  mountPoint: Element | ShadowRoot;
-
   constructor() {
     super();
 
@@ -28,12 +26,22 @@ export abstract class Component extends HTMLElement {
         return this.attachShadow(config as ShadowRootInit);
       };
     }
-
-    this.mountPoint = this.getMountPoint();
   }
 
   getMountPoint(): HTMLElement | ShadowRoot {
     return this.attachShadow({ mode: "open" });
+  }
+
+  _mountPoint!: Element | ShadowRoot;
+
+  get mountPoint() {
+    if (this._mountPoint) {
+      return this._mountPoint;
+    }
+
+    this._mountPoint = this.getMountPoint();
+
+    return this._mountPoint;
   }
 
   attachStyles(styles: string) {
@@ -89,7 +97,6 @@ export abstract class Component extends HTMLElement {
           "Error rendering.  Did you forget to return an html tagged template?",
         );
       }
-
     }
   }
 
@@ -139,7 +146,7 @@ export abstract class Component extends HTMLElement {
         const currentAttr = this.getAttribute(attr);
 
         // Don't trigger if already equal
-        if (currentAttr !== toAttr(sig.peek as T)) {
+        if (currentAttr !== toAttr(sig.peek() as T)) {
           this.setAttribute(attr, toAttr(sig.value as T));
         }
       });
@@ -160,5 +167,42 @@ export abstract class Component extends HTMLElement {
     this.addDestroyer(mo.disconnect.bind(mo));
 
     return sig;
+  }
+
+  booleanAttr(attr: string, reflect?: boolean) {
+    const isPresent = (attr: string) => this.getAttribute(attr) !== null;
+
+    const bool = signal<boolean>(isPresent(attr));
+
+    if (reflect) {
+      const disposeEffect = effect(() => {
+        const currentAttr = isPresent(attr);
+
+        // Don't trigger if already equal
+        if (currentAttr !== bool.value) {
+          if (bool.value) {
+            this.setAttribute(attr, "");
+          } else {
+            this.removeAttribute(attr);
+          }
+        }
+      });
+
+      this.addDestroyer(disposeEffect);
+    }
+
+    const mo = new MutationObserver((list) => {
+      for (const item of list) {
+        if (item.attributeName === attr) {
+          bool.value = isPresent(attr);
+        }
+      }
+    });
+
+    mo.observe(this, { attributes: true });
+
+    this.addDestroyer(mo.disconnect.bind(mo));
+
+    return bool;
   }
 }
