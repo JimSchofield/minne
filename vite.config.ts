@@ -15,10 +15,10 @@ export default defineConfig({
       formats: ['es'],
     },
     sourcemap: true,
-    minify: false,
+    minify: true,
     terserOptions: {
-      compress: false,
-      mangle: false,
+      compress: true,
+      mangle: true,
     },
   },
   plugins: [dts({ 
