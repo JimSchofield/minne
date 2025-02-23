@@ -1,6 +1,6 @@
 import { signal } from "@preact/signals-core";
-import { Component, html } from "../src/component";
-import { fc } from "../src/fc";
+import { Component, html } from "../lib/component";
+import { fc } from "../lib/fc";
 
 class ChildComponent extends Component {
   count = signal(0);
@@ -26,8 +26,10 @@ const OtherChild = () => {
 
   setInterval(() => count.value++, 1000);
 
+  const rand = Math.random();
+
   return () => {
-    console.log("fc child render");
+    console.log("fc child render: " + rand);
     return html` <div>
       <div>FC child: ${count.value}</div>
       <div>FC child: ${text.value}</div>
@@ -46,8 +48,8 @@ export default class AdultComponent extends Component {
         <div>Adult</div>
         <child- />
         <div>
-          ${this.toggle.value && fc(OtherChild())}
           <button onclick=${() => this.toggle.value = !this.toggle.value}>toggle</button>
+          ${this.toggle.value ? fc(OtherChild()) : undefined}
           </div>
       </div>
     `;

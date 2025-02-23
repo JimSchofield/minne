@@ -22,8 +22,10 @@ export abstract class Component extends HTMLElement {
     }
 
     if ("shadowRoot" in this.constructor) {
+      const config = this.constructor.shadowRoot;
+
       this.getMountPoint = () => {
-        return this.attachShadow(this.constructor.shadowRoot as ShadowRootInit);
+        return this.attachShadow(config as ShadowRootInit);
       };
     }
 
@@ -62,18 +64,32 @@ export abstract class Component extends HTMLElement {
   }
 
   // Left to override by consumer
-  render() {}
+  render() {
+    return html``;
+  }
 
   connectedCallback() {
     if ("render" in this) {
+      // We need this difference, because if we don't we don't have a fallback
+      // to render nothing in the base class `render`.
+      // @ts-expect-error ignore difference in () => Hole and () => Node
       this.render = render.bind(
         null,
         this.mountPoint,
         (this.render as () => Renderable).bind(this),
       );
 
-      const destroyEffect = effect(this.render);
-      this.addDestroyer(destroyEffect);
+      try {
+        // @ts-expect-error ignore render typing
+        const destroyEffect = effect(this.render);
+
+        this.addDestroyer(destroyEffect);
+      } catch (e) {
+        throw new Error(
+          "Error rendering.  Did you forget to return an html tagged template?",
+        );
+      }
+
     }
   }
 

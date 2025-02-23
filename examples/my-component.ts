@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals-core";
-import { Component, css, html } from "../src/component";
+import { Component, css, html } from "../lib/component";
 
 export default class MyComponent extends Component {
   getMountPoint() {
@@ -41,8 +41,8 @@ export default class MyComponent extends Component {
     </div>`;
   };
 
-  handleDateChange = (event) => {
-    this.date.value = event.target.valueAsDate;
+  handleDateChange = (event: Event) => {
+    this.date.value = (event.target as HTMLInputElement).valueAsDate!;
   };
 
   renderDate = () =>

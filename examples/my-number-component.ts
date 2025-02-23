@@ -1,4 +1,4 @@
-import { Component, css, html } from "../src/component";
+import { Component, css, html } from "../lib/component";
 
 export default class MyNumberComponent extends Component {
   static css = css`

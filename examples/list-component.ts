@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals-core";
-import { Component, css, html } from "../src/component";
+import { Component, css, html } from "../lib/component";
 import { actions, myList } from "./some-state";
 
 export default class MyList extends Component {
@@ -31,7 +31,8 @@ export default class MyList extends Component {
       <input
         type="text"
         .value=${this.text.value}
-        oninput=${() => (this.text.value = event.target.value)}
+        oninput=${(event: InputEvent) =>
+          (this.text.value = (event.target as HTMLInputElement).value)}
       />
       <button onclick=${this.add.bind(this)}>add</button>
     `;

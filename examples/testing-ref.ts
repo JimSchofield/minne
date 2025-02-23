@@ -1,5 +1,5 @@
 import { signal } from "@preact/signals-core";
-import { Component, css, html } from "../src/component";
+import { Component, css, html } from "../lib/component";
 
 export default class TestingRef extends Component {
   ref?: HTMLElement;
