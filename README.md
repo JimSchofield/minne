@@ -252,7 +252,11 @@ There are two solutions:
 class AnotherComponent extends Minne {
     static publicReactive = ['myProperty'];
 
-    myProperty = signal("Default value");
+    constructor() {
+        super();
+
+        this.publicReactive = signal("Optional for default value");
+    }
 
     render() { /* ... */ }
 }
