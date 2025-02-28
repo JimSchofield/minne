@@ -193,7 +193,7 @@ An alternative is to register a destroyer. Destroyers are run on disconnected ca
 
 ```ts
 class MyComponent extends Component {
-  consructor() {
+  constructor() {
     super();
 
     window.addEventListener("resize", this.handleresize);
