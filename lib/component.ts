@@ -31,22 +31,14 @@ export abstract class Component extends HTMLElement {
         return this.attachShadow(config as ShadowRootInit);
       };
     }
-
-    if (
-      "publicReactive" in this.constructor &&
-      Array.isArray(this.constructor.publicReactive)
-    ) {
-      this.constructor.publicReactive.forEach((prop) =>
-        this.setupPublicReactiveProp(prop),
-      );
-    }
   }
 
-  setupPublicReactiveProp(prop: string) {
-    let s = signal();
+  publicReactive(propertyKey: PropertyKey, value: string) {
+    let s = signal(value);
 
-    Object.defineProperty(this, prop, {
+    Object.defineProperty(this, propertyKey, {
       set(val: any) {
+        // If already a preact signal, just use that
         if (
           typeof val === "object" &&
           "brand" in val &&
@@ -54,6 +46,7 @@ export abstract class Component extends HTMLElement {
         ) {
           s = val;
         } else {
+          // Otherwise, pass on value that triggers reactivity
           s.value = val;
         }
       },
@@ -61,6 +54,8 @@ export abstract class Component extends HTMLElement {
         return s;
       },
     });
+
+    return s;
   }
 
   getMountPoint(): HTMLElement | ShadowRoot {

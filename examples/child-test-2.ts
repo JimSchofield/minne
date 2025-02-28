@@ -2,9 +2,7 @@ import { signal } from "@preact/signals-core";
 import { Component, html } from "../lib/component";
 
 class ChildComponent extends Component {
-  static publicReactive = ["publicProperty"];
-
-  publicProperty = signal("default string");
+  publicProperty = this.publicReactive("publicProperty", "Default");
 
   render() {
     return html`<div>${this.publicProperty.value}</div>`;
@@ -26,7 +24,7 @@ export default class AdultComponent extends Component {
             oninput=${(event: InputEvent) =>
               (this.text.value = (event.target as HTMLInputElement).value)}
           />
-          <child-component .publicProperty=${this.text}></child-component>
+          <child-component .publicProperty=${this.text.value}></child-component>
         </div>
       </div>
     `;

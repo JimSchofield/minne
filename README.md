@@ -78,7 +78,6 @@ signal.value.push(item);
 signal.value = [...signal.value, item];
 ```
 
-
 ## Shadow root and shadow root options 👤
 
 By default minne components create a shadow root on the host element. This is configurable by setting shadow root configuration object on `static shadowRoot`:
@@ -216,7 +215,7 @@ class MyComponent extends Component {
 }
 ```
 
-## Note about externally-set reactive properties 🤝
+## `publicReactive()`: Note about externally-set reactive properties 🤝
 
 For a signal to continue to be reactive in a consumed component, the property should be set on the `.value` of the signal:
 
@@ -225,7 +224,7 @@ For a signal to continue to be reactive in a consumed component, the property sh
 anotherComponent.somePropThatIsASignal.value = this.someSignal.value;
 ```
 
-Since _properties_ are being set often by templating libraries or JSX, we can lose reactivity because those templating strategies don't set values on `.value`.  This is true with JSX and `html`:
+Since _properties_ are being set often by templating libraries or JSX, we can lose reactivity because those templating strategies don't set values on `.value`. This is true with JSX and `html`:
 
 ```ts
 class ConsumingComponent extends Minne {
@@ -241,7 +240,7 @@ class ConsumingComponent extends Minne {
 }
 ```
 
-Above, the string is passed in the template to the component and it's no longer a signal, so it loses reactivity.  In other words, the `html` tagged template doesn't know to set `this.someSignal.value` actually to `.someProp.value`.
+Above, the string is passed in the template to the component and it's no longer a signal, so it loses reactivity. In other words, the `html` tagged template doesn't know to set `this.someSignal.value` actually to `.someProp.value`.
 
 There are two solutions:
 
@@ -250,20 +249,19 @@ There are two solutions:
 
 ```ts
 class AnotherComponent extends Minne {
-    static publicReactive = ['myProperty'];
+  constructor() {
+    super();
 
-    constructor() {
-        super();
+    this.publicReactive("myProp", "default");
+  }
 
-        this.publicReactive = signal("Optional for default value");
-    }
-
-    render() { /* ... */ }
+  render() {
+    /* ... */
+  }
 }
-
 ```
 
-The `publicReactive` array of strings lets Minne know to set up the property so that if a preact signal _or_ another regular value is set right on the property from outside of the component it will preserve the signal and reactivity.
+The `publicReactive()` method lets Minne know to set up the property so that if a preact signal _or_ another regular value is set right on the property from outside of the component it will preserve the signal and reactivity. Unfortunately, you do need to pass in the name of the property as you set the property with this method.
 
 ## Function Components (Experimental 🧪)
 
