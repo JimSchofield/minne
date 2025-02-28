@@ -1,3 +1,4 @@
+import { version } from "../package.json";
 import { html, render, Renderable } from "lighterhtml";
 import { effect, signal } from "@preact/signals-core";
 export { html };
@@ -10,6 +11,10 @@ const identity = (t: any) => t;
 const onDestroy = Symbol("on-destroy");
 
 export abstract class Component extends HTMLElement {
+  static brand = Symbol.for("minne-component");
+
+  static version = version;
+
   [onDestroy]: Set<() => void> = new Set();
 
   constructor() {
