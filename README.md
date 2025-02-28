@@ -14,6 +14,16 @@ I'm from minnesota, and this is a "minne" framework ![Minnesota outline](./publi
 
 `npm i minne`
 
+## Using UNPKG:
+
+To import from a CDN, you can use the following line if you're working with modules:
+
+```ts
+import { Component, html, signal } from "https://unpkg.com/minne";
+```
+
+[Check out an example on codepen](https://codepen.io/oldcoyote/pen/yyLgOmd)
+
 ## Components 🧩
 
 Extend the `Component` class, and return an `html` tagged template literal in a `render()` function.
@@ -67,6 +77,7 @@ signal.value.push(item);
 // This re-assigns the array reference and will trigger udpates
 signal.value = [...signal.value, item];
 ```
+
 
 ## Shadow root and shadow root options 👤
 
@@ -204,6 +215,51 @@ class MyComponent extends Component {
   }
 }
 ```
+
+## Note about externally-set reactive properties 🤝
+
+For a signal to continue to be reactive in a consumed component, the property should be set on the `.value` of the signal:
+
+```ts
+// someProp is a signal inside of another component
+anotherComponent.somePropThatIsASignal.value = this.someSignal.value;
+```
+
+Since _properties_ are being set often by templating libraries or JSX, we can lose reactivity because those templating strategies don't set values on `.value`.  This is true with JSX and `html`:
+
+```ts
+class ConsumingComponent extends Minne {
+  someSignal = signal("hi");
+
+  //...
+
+  render() {
+    return html`<another-component
+      .someProp=${this.someSignal.value}
+    ></another-component>`;
+  }
+}
+```
+
+Above, the string is passed in the template to the component and it's no longer a signal, so it loses reactivity.  In other words, the `html` tagged template doesn't know to set `this.someSignal.value` actually to `.someProp.value`.
+
+There are two solutions:
+
+1. You can pass signals if you are in control of how the property is being set
+2. You can "notify" minne componnents that values might be set directly, by declaring a `publicReactive` property:
+
+```ts
+class AnotherComponent extends Minne {
+    static publicReactive = ['myProperty'];
+
+    myProperty = signal("Default value");
+
+    render() { /* ... */ }
+}
+
+```
+
+The `publicReactive` array of strings lets Minne know to set up the property so that if a preact signal _or_ another regular value is set right on the property from outside of the component it will preserve the signal and reactivity.
 
 ## Function Components (Experimental 🧪)
 

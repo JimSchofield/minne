@@ -26,6 +26,36 @@ export abstract class Component extends HTMLElement {
         return this.attachShadow(config as ShadowRootInit);
       };
     }
+
+    if (
+      "publicReactive" in this.constructor &&
+      Array.isArray(this.constructor.publicReactive)
+    ) {
+      this.constructor.publicReactive.forEach((prop) =>
+        this.setupPublicReactiveProp(prop),
+      );
+    }
+  }
+
+  setupPublicReactiveProp(prop: string) {
+    let s = signal();
+
+    Object.defineProperty(this, prop, {
+      set(val: any) {
+        if (
+          typeof val === "object" &&
+          "brand" in val &&
+          val.brand === Symbol.for("preact-signals")
+        ) {
+          s = val;
+        } else {
+          s.value = val;
+        }
+      },
+      get() {
+        return s;
+      },
+    });
   }
 
   getMountPoint(): HTMLElement | ShadowRoot {
