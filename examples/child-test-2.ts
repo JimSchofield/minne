@@ -2,7 +2,12 @@ import { signal } from "@preact/signals-core";
 import { Component, html } from "../lib/component";
 
 class ChildComponent extends Component {
-  publicProperty = this.publicReactive("publicProperty", "Default");
+  constructor() {
+    super();
+    this.publicReactive("publicProperty", "Default");
+  }
+
+  declare publicProperty: { value: string };
 
   render() {
     return html`<div>${this.publicProperty.value}</div>`;

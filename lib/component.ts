@@ -33,7 +33,7 @@ export abstract class Component extends HTMLElement {
     }
   }
 
-  publicReactive(propertyKey: PropertyKey, value: string) {
+  publicReactive<T>(propertyKey: PropertyKey, value: T) {
     let s = signal(value);
 
     Object.defineProperty(this, propertyKey, {
