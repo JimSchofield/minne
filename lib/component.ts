@@ -23,14 +23,6 @@ export abstract class Component extends HTMLElement {
     if ("css" in this.constructor) {
       this.attachStyles(this.constructor.css as string);
     }
-
-    if ("shadowRoot" in this.constructor) {
-      const config = this.constructor.shadowRoot;
-
-      this.getMountPoint = () => {
-        return this.attachShadow(config as ShadowRootInit);
-      };
-    }
   }
 
   publicReactive<T>(propertyKey: PropertyKey, value: T) {

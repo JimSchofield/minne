@@ -2,7 +2,9 @@ import { signal } from "@preact/signals-core";
 import { Component, css, html } from "../lib/component";
 
 export default class MyComponent extends Component {
-  static shadowRoot = false;
+  static shadowRoot = {
+    mode: "closed",
+  };
 
   static css = css`
     div {
