@@ -2,9 +2,7 @@ import { signal } from "@preact/signals-core";
 import { Component, css, html } from "../lib/component";
 
 export default class MyComponent extends Component {
-  getMountPoint() {
-    return this.attachShadow({ mode: "open" })!;
-  }
+  static shadowRoot = false;
 
   static css = css`
     div {

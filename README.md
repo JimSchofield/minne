@@ -108,6 +108,16 @@ class MyComponent extends Component {
 }
 ```
 
+Or event more simply:
+
+```ts
+class MyComponent extends Component {
+  static shadowRoot = false;
+
+  render() {} // renders without shadow dom on this (host element)
+}
+```
+
 ## Attributes 📋
 
 Generally we can leverage `this.getAttribute` to get an attribute as an initial value:

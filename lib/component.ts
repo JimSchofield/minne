@@ -59,7 +59,19 @@ export abstract class Component extends HTMLElement {
   }
 
   getMountPoint(): HTMLElement | ShadowRoot {
-    return this.attachShadow({ mode: "open" });
+    if ("shadowRoot" in this.constructor) {
+      const config = this.constructor.shadowRoot;
+
+      if (config === false) {
+        // if literally false, just attach to host
+        return this;
+      }
+
+      return this.attachShadow(config as ShadowRootInit);
+    } else {
+      // Default is open shadow root
+      return this.attachShadow({ mode: "open" });
+    }
   }
 
   _mountPoint!: Element | ShadowRoot;
