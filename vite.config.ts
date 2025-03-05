@@ -16,10 +16,6 @@ export default defineConfig({
     },
     sourcemap: true,
     minify: true,
-    terserOptions: {
-      compress: true,
-      mangle: true,
-    },
   },
   plugins: [dts({ 
     tsconfigPath: "./tsconfig.json",
